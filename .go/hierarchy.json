@@ -14,6 +14,15 @@
         }
       ],
       "tasks": []
+    },
+    {
+      "id": "product",
+      "title": "Attachment Link Rules",
+      "description": "Public plugin behavior, settings, verification, documentation, and release.",
+      "features": [],
+      "tasks": [
+        "build-attachment-link-rules"
+      ]
     }
   ]
 }
