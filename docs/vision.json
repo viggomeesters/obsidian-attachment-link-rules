@@ -1,0 +1,25 @@
+{
+  "schema": "repo-design-vision.v1",
+  "product": "Attachment Link Rules",
+  "north_star": "Dropped attachments always use the link or embed syntax the user expects for that extension.",
+  "target_user": "People who keep PDFs and office files as references but want images and media embedded inline.",
+  "core_promise": "Preserve native attachment handling and change only the leading embed marker for configured extensions.",
+  "principles": [
+    "Use public APIs and DOM surfaces only.",
+    "Let the app own attachment storage, naming, destination, and link format.",
+    "Rewrite only text inserted by the current drop.",
+    "Keep unknown extensions on native default behavior.",
+    "Prove behavior in a disposable Windows-local test vault."
+  ],
+  "non_goals": [
+    "Replace attachment storage.",
+    "Manage or rename existing files.",
+    "Rewrite existing note content.",
+    "Become a general file manager."
+  ],
+  "success_metrics": [
+    "PDF drops produce non-embedded links under defaults.",
+    "Common image drops produce embeds under defaults.",
+    "Community preflight and runtime smoke pass before release."
+  ]
+}

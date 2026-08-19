@@ -5,7 +5,7 @@
   "shareable_delivery": "required",
   "id": "build-attachment-link-rules",
   "project": "obsidian-attachment-link-rules",
-  "status": "open",
+  "status": "active",
   "summary": "Build and release Attachment Link Rules",
   "description": "Create a complete public Obsidian plugin repository, implement extension-based link/embed/default behavior for dropped attachments with test-first core logic, add local and community checker gates, prove it in the Windows-local test vault, create the public GitHub repository, and publish release 0.1.0.",
   "scope": {
@@ -30,10 +30,10 @@
     "python3 /home/viggo/github/viggo-agent-skills/scripts/repo_complete_bootstrap.py --public --mode validate --kind obsidian-plugin --path . --release-policy required --url-policy none --json-schema"
   ],
   "claim": {
-    "agent": null,
-    "claimed_at": null
+    "agent": "hermes",
+    "claimed_at": "2026-08-19T13:34:42+02:00"
   },
-  "work_status": "pending",
+  "work_status": "in_progress",
   "review_status": "none",
   "review_history": [],
   "evidence": []
