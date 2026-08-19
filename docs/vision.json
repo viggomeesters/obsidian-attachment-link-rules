@@ -18,6 +18,20 @@
   },
   "principles": [
     {
+      "id": "agent-first",
+      "title": "Agent-verifiable repository",
+      "rule": "Behavior, release contracts, and proof must be reproducible from a fresh clone without relying on chat history.",
+      "good": ["machine-readable vision", "deterministic scripts", "runtime evidence"],
+      "bad": ["manual-only claims", "implicit release steps", "chat-only decisions"]
+    },
+    {
+      "id": "json-first",
+      "title": "Structured contracts first",
+      "rule": "Machine-consumable project and verification contracts use JSON or JSONL; Markdown provides human context.",
+      "good": ["docs/vision.json", ".go task state", "JSON smoke output"],
+      "bad": ["prose as the only source of truth", "unstructured release evidence"]
+    },
+    {
       "id": "native-storage",
       "title": "Native attachment handling",
       "rule": "The app owns attachment storage, duplicate-name resolution, destination, exact drop position, and Wiki or Markdown link formatting.",
