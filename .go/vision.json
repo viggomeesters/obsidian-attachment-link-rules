@@ -1,0 +1,19 @@
+{
+  "schema": "go-workflow.repo-local.vision.v1",
+  "kind": "vision",
+  "project": "obsidian-attachment-link-rules",
+  "status": "active",
+  "north_star": "Let users control whether dropped attachments become links or embeds by file extension.",
+  "wedge": "Intercept external file drops in Markdown editors and insert a configured link or embed while preserving native attachment storage and link format.",
+  "target_user": "Obsidian users who want predictable attachment links",
+  "core_promise": "Every configured extension lands as the selected link, embed, or native default form.",
+  "product_principles": [
+    "Use only public APIs and never modify existing attachments."
+  ],
+  "non_goals": [
+    "Replace Obsidian attachment storage or become a file manager."
+  ],
+  "success_metrics": [
+    "PDF drops produce links while image drops produce embeds under the default settings."
+  ]
+}
