@@ -1,0 +1,53 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "mechanical",
+  "shareable_delivery": "auto",
+  "id": "improve-community-scorecard",
+  "project": "obsidian-attachment-link-rules",
+  "status": "open",
+  "summary": "Improve Community scorecard without sacrificing compatibility",
+  "description": "Inspect the live Community scorecard, remove safely actionable review warnings, preserve supported stable versions and public API behavior, document any policy-blocked attestation item, verify in the local test vault, and release only when runtime artifacts change.",
+  "scope": {
+    "read": [
+      "src/**",
+      "manifest.json",
+      "package.json",
+      "node_modules/obsidian/obsidian.d.ts",
+      "README.md",
+      "docs/**"
+    ],
+    "modify": [
+      "src/**",
+      "tests/**",
+      "manifest.json",
+      "package.json",
+      "package-lock.json",
+      "versions.json",
+      "main.js",
+      "README.md",
+      "CHANGELOG.md",
+      "docs/**",
+      "scripts/**",
+      ".go/**"
+    ]
+  },
+  "acceptance": [
+    "Every live scorecard finding is classified as fixed, intentionally retained for compatibility, or blocked by the GitHub Actions prohibition with evidence.",
+    "No Community-review warning is suppressed merely to hide it; compatibility behavior is tested.",
+    "npm run check and Windows-local test-vault runtime smoke pass.",
+    "If runtime artifacts change, version and release assets are updated and verified; otherwise no vanity release is created."
+  ],
+  "verification": [
+    "npm run check",
+    "npm run sync:test-vault && npm run smoke:test-vault"
+  ],
+  "claim": {
+    "agent": null,
+    "claimed_at": null
+  },
+  "work_status": "pending",
+  "review_status": "none",
+  "review_history": [],
+  "evidence": []
+}

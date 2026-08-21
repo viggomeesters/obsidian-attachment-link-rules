@@ -21,7 +21,8 @@
       "description": "Public plugin behavior, settings, verification, documentation, and release.",
       "features": [],
       "tasks": [
-        "build-attachment-link-rules"
+        "build-attachment-link-rules",
+        "improve-community-scorecard"
       ]
     }
   ]
