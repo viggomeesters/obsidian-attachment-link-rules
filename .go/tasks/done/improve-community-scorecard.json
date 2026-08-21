@@ -1,0 +1,88 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "mechanical",
+  "shareable_delivery": "auto",
+  "id": "improve-community-scorecard",
+  "project": "obsidian-attachment-link-rules",
+  "status": "done",
+  "summary": "Improve Community scorecard without sacrificing compatibility",
+  "description": "Inspect the live Community scorecard, remove safely actionable review warnings, preserve supported stable versions and public API behavior, document any policy-blocked attestation item, verify in the local test vault, and release only when runtime artifacts change.",
+  "scope": {
+    "read": [
+      "src/**",
+      "manifest.json",
+      "package.json",
+      "node_modules/obsidian/obsidian.d.ts",
+      "README.md",
+      "docs/**"
+    ],
+    "modify": [
+      "src/**",
+      "tests/**",
+      "manifest.json",
+      "package.json",
+      "package-lock.json",
+      "versions.json",
+      "main.js",
+      "README.md",
+      "CHANGELOG.md",
+      "docs/**",
+      "scripts/**",
+      ".go/**"
+    ]
+  },
+  "acceptance": [
+    "Every live scorecard finding is classified as fixed, intentionally retained for compatibility, or blocked by the GitHub Actions prohibition with evidence.",
+    "No Community-review warning is suppressed merely to hide it; compatibility behavior is tested.",
+    "npm run check and Windows-local test-vault runtime smoke pass.",
+    "If runtime artifacts change, version and release assets are updated and verified; otherwise no vanity release is created."
+  ],
+  "verification": [
+    "npm run check",
+    "npm run sync:test-vault && npm run smoke:test-vault"
+  ],
+  "claim": {
+    "agent": "hermes",
+    "claimed_at": "2026-08-21T08:10:25+02:00"
+  },
+  "work_status": "completed",
+  "review_status": "review",
+  "review_history": [],
+  "evidence": [
+    {
+      "schema": "go-workflow.finish-evidence.v1",
+      "created_at": "2026-08-21T08:23:05+02:00",
+      "task_id": "improve-community-scorecard",
+      "agent": "hermes",
+      "summary": "no_diff=true; verification=npm run check rc=0 and Windows-local restart smoke rc=0 and legacy settings UI visible=true; critic=passed verdict A, settings warnings fixed without reducing minAppVersion, artifact attestations intentionally blocked by repository GitHub Actions prohibition; release=0.1.1 assets byte-identical; live_page=pending Community cache refresh from 0.1.0",
+      "changed_files": [],
+      "no_diff": true,
+      "verification": {
+        "command": "npm run check rc=0 and Windows-local restart smoke rc=0 and legacy settings UI visible=true",
+        "result": "npm run check rc=0 and Windows-local restart smoke rc=0 and legacy settings UI visible=true"
+      },
+      "runtime": {
+        "agent": "hermes",
+        "runtime": null,
+        "model": null,
+        "billing_mode": "unknown"
+      },
+      "usage": {
+        "schema": "go-workflow.usage-attribution.v1",
+        "runtime_kind": "unknown",
+        "billing_mode": "unknown",
+        "owner": "hermes",
+        "model": null,
+        "token_estimate": null,
+        "api_equivalent_cost_usd": null,
+        "provider_invoice_cost_usd": null,
+        "cost_label": "api_equivalent_not_invoice_cost"
+      },
+      "review": {
+        "outcome": "passed verdict A, settings warnings fixed without reducing minAppVersion, artifact attestations intentionally blocked by repository GitHub Actions prohibition",
+        "skip_reason": null
+      }
+    }
+  ]
+}
