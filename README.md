@@ -67,6 +67,8 @@ The same rule engine supports Wiki links and Markdown links. Existing links else
 
 Open **Settings → Attachment Link Rules**:
 
+On Obsidian 1.13 and later, these options are also indexed by the built-in settings search. Older supported versions continue to use the same settings through the legacy-compatible interface.
+
 - **Link extensions** removes the leading `!`.
 - **Embed extensions** ensures the leading `!` is present.
 - **Unlisted extensions** keep native behavior.
@@ -85,7 +87,7 @@ npm run sync:test-vault
 npm run smoke:test-vault
 ```
 
-`npm run check` runs the complete local source and Community preflight. GitHub Actions are intentionally not required; the repository's deterministic gate is documented in [Local validation](docs/local-validation.md).
+`npm run check` runs the complete local source and Community preflight. GitHub Actions are intentionally not required; the repository's deterministic gate is documented in [Local validation](docs/local-validation.md). Current Community scorecard findings and their disposition are recorded in [Community scorecard notes](docs/community-scorecard.md).
 
 The test-vault sync refuses paths outside the Windows-local `obsidian-test-vault` plugin folder and refuses the main Syncthing vault.
 

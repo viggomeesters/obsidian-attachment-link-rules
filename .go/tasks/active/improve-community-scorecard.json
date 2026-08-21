@@ -5,7 +5,7 @@
   "shareable_delivery": "auto",
   "id": "improve-community-scorecard",
   "project": "obsidian-attachment-link-rules",
-  "status": "open",
+  "status": "active",
   "summary": "Improve Community scorecard without sacrificing compatibility",
   "description": "Inspect the live Community scorecard, remove safely actionable review warnings, preserve supported stable versions and public API behavior, document any policy-blocked attestation item, verify in the local test vault, and release only when runtime artifacts change.",
   "scope": {
@@ -43,10 +43,10 @@
     "npm run sync:test-vault && npm run smoke:test-vault"
   ],
   "claim": {
-    "agent": null,
-    "claimed_at": null
+    "agent": "hermes",
+    "claimed_at": "2026-08-21T08:10:25+02:00"
   },
-  "work_status": "pending",
+  "work_status": "in_progress",
   "review_status": "none",
   "review_history": [],
   "evidence": []

@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { readFile } from "node:fs/promises";
+
 import {
   DEFAULT_SETTINGS,
   actionForFileName,
@@ -90,4 +92,11 @@ test("an attachment inserted before another wikilink does not confuse the diff b
       text: "![[diagram.png]][[report.pdf]]# Note\n",
     },
   );
+});
+
+test("settings tab exposes searchable definitions without calling deprecated display", async () => {
+  const source = await readFile(new URL("../src/main.ts", import.meta.url), "utf8");
+
+  assert.match(source, /getSettingDefinitions\(\): SettingDefinitionItem\[\]/);
+  assert.doesNotMatch(source, /this\.display\(\)/);
 });

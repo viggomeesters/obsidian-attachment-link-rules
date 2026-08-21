@@ -1,7 +1,7 @@
 {
   "id": "attachment-link-rules",
   "name": "Attachment Link Rules",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "minAppVersion": "1.5.7",
   "description": "Choose link or embed syntax for dropped attachments by file extension.",
   "author": "Viggo Meesters",
