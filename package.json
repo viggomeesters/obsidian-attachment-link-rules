@@ -1,6 +1,6 @@
 {
   "name": "obsidian-attachment-link-rules",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Choose link or embed syntax for dropped attachments by file extension.",
   "license": "MIT",
   "author": "Viggo Meesters",
@@ -14,7 +14,7 @@
   "homepage": "https://github.com/viggomeesters/obsidian-attachment-link-rules#readme",
   "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
     "build:test": "esbuild src/core.ts --bundle --platform=node --format=esm --outfile=dist/core.mjs",
     "dev": "node esbuild.config.mjs",
     "lint": "node scripts/lint.mjs && eslint src/**/*.ts",
@@ -34,5 +34,8 @@
     "eslint-plugin-obsidianmd": "^0.4.1",
     "obsidian": "^1.13.1",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "moment": "^2.31.0"
   }
 }

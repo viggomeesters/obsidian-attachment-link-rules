@@ -13,7 +13,9 @@
           "tasks": []
         }
       ],
-      "tasks": []
+      "tasks": [
+        "baseline-maintenance"
+      ]
     },
     {
       "id": "product",
@@ -22,7 +24,10 @@
       "features": [],
       "tasks": [
         "build-attachment-link-rules",
-        "improve-community-scorecard"
+        "improve-community-scorecard",
+        "publish-cooperation",
+        "mail-drop-cooperation",
+        "runtime-release-acceptance"
       ]
     }
   ]

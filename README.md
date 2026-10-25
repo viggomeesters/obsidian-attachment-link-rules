@@ -33,11 +33,11 @@ This avoids private editor internals and avoids reimplementing attachment storag
 
 ## Installation
 
-Install from the Community directory when available, or copy the three signed release artifacts for a manual test-vault installation. No package manager or external service is required at runtime.
+Install from the Community directory, or copy the three release files for a manual test-vault installation. No package manager or external service is required at runtime.
 
 ### Community plugins
 
-After the plugin is accepted into the Community directory:
+Install the published plugin:
 
 1. Open **Settings → Community plugins → Browse**.
 2. Search for **Attachment Link Rules**.
@@ -110,3 +110,15 @@ See [community submission notes](docs/community-submission.md) and [CHANGELOG.md
 ## License
 
 MIT © 2026 Viggo Meesters.
+
+## Cooperating with Mail Drop (0.2.0)
+
+With Mail Drop 0.10.0 or later, choose **Use attachment rules** in Mail Drop. Mail Drop saves and names external files; Attachment Link Rules chooses link or embed syntax. Internal vault drags keep native storage and naming. Email entries remain owned by Mail Drop. No second attachment copy is created.
+
+For images only as embeds, set **Embed extensions** to `png jpg jpeg gif webp svg avif bmp`, and **Unlisted extensions** to **Use links**. Keep document types in **Link extensions**. Audio, video, unknown extensions and extensionless files then use normal links. Existing settings and the public default rules remain unchanged unless you choose this configuration.
+
+Importers can use the optional synchronous document event `attachment-link-rules:format-v1` with mutable detail `{version:1, fileName, link, handled:false}`. The plugin applies its current rules to the supplied native Wiki or Markdown link and sets `handled:true`. No listener means the caller keeps native syntax. Dispatch on the target note's owner document. The provider also registers for detached windows and removes its listeners on unload.
+
+Before consuming a drop, a cooperating importer dispatches `attachment-link-rules:managed-drop-v1` on that document with `{version:1,event:originalDragEvent}`. The normal drop observer skips that event, including when it ran first. This prevents a second rewrite of a whole mail block and avoids depending on the observer's short retry window for slow file I/O. These events do not install, store or rename attachments.
+
+Runtime evidence identifies the source and bundle hashes for this release.

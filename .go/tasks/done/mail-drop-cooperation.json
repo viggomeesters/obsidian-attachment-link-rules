@@ -1,0 +1,108 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "agent",
+  "shareable_delivery": "none",
+  "id": "mail-drop-cooperation",
+  "project": "obsidian-attachment-link-rules",
+  "status": "done",
+  "summary": "Expose attachment link formatting for Mail Drop without duplicate storage",
+  "description": "Optional documented DOM formatting contract, unlisted extension policy, preserve defaults and native storage. Isolated from concurrent runtime acceptance. Local candidate and test-vault integration only; no push/public release.",
+  "scope": {
+    "read": [
+      "src",
+      "tests",
+      "README.md"
+    ],
+    "modify": [
+      "src",
+      "tests",
+      "README.md",
+      "docs",
+      "CHANGELOG.md",
+      "manifest.json",
+      "versions.json",
+      "package.json",
+      "package-lock.json",
+      "main.js"
+    ]
+  },
+  "acceptance": [
+    "Synchronous validated formatting requests honor link/embed/unlisted settings for Wiki and Markdown syntax; existing defaults unchanged; public API only and clean unload; tests and strict lint/typecheck/build pass."
+  ],
+  "verification": [
+    "npm run lint && npm run typecheck && npm test && npm run build"
+  ],
+  "claim": {
+    "agent": "codex",
+    "claimed_at": "2026-10-25T13:41:12+01:00",
+    "base_commit": "0916e94b761d83b6fffbb6562a1a033a347dfada"
+  },
+  "work_status": "completed",
+  "review_status": "review",
+  "review_history": [],
+  "evidence": [
+    {
+      "schema": "go-workflow.finish-evidence.v1",
+      "created_at": "2026-10-25T13:55:49+01:00",
+      "task_id": "mail-drop-cooperation",
+      "agent": "codex",
+      "summary": "verification=npm run lint && npm run typecheck && npm test && npm run build; result=passed; critic=codex same_agent passed, no blocking findings; runtime=Codex; changed_files=.go/hierarchy.json, .go/tasks/active/mail-drop-cooperation.json, CHANGELOG.md, README.md, main.js, manifest.json, package-lock.json, package.json, src/core.ts, src/main.ts, tests/cooperation.test.mjs, versions.json; acceptance=115 actual isolated Obsidian checks passed, candidates installed and hash-matched, native receiver connected; publication=local only, no push or release; self_reflect=installed-only inventory gap addressed by reuse check in central plugin approach",
+      "changed_files": [
+        ".go/hierarchy.json",
+        ".go/tasks/active/mail-drop-cooperation.json",
+        "CHANGELOG.md",
+        "README.md",
+        "main.js",
+        "manifest.json",
+        "package-lock.json",
+        "package.json",
+        "src/core.ts",
+        "src/main.ts",
+        "tests/cooperation.test.mjs",
+        "versions.json"
+      ],
+      "no_diff": false,
+      "git": {
+        "claim_base_commit": "0916e94b761d83b6fffbb6562a1a033a347dfada",
+        "observed_head_commit": "32141a1c64a91ede45450c8413d21e7860a3ee72"
+      },
+      "verification": {
+        "command": "npm run lint && npm run typecheck && npm test && npm run build",
+        "result": "passed"
+      },
+      "runtime": {
+        "agent": "codex",
+        "runtime": "Codex",
+        "model": null,
+        "billing_mode": "unknown"
+      },
+      "usage": {
+        "schema": "go-workflow.usage-attribution.v1",
+        "runtime_kind": "Codex",
+        "billing_mode": "unknown",
+        "owner": "codex",
+        "model": null,
+        "token_estimate": null,
+        "api_equivalent_cost_usd": null,
+        "provider_invoice_cost_usd": null,
+        "cost_label": "api_equivalent_not_invoice_cost"
+      },
+      "review": {
+        "outcome": "codex same_agent passed, no blocking findings",
+        "skip_reason": null
+      }
+    }
+  ],
+  "completion_evidence": {
+    "schema": "go-workflow.completion-evidence.v1",
+    "verification": {
+      "path": ".go/runs/mail-drop-cooperation/completion/verification-356b7833e40443fabbc26cc1c986046a.json",
+      "sha256": "4a8d4f89986be2ae91cdabe1647b64cfc1abffc3dc958e1585b13586a3c38d58"
+    },
+    "critic": {
+      "path": ".go/runs/mail-drop-cooperation/completion/critic-96a81d409ba148b2aa6e609e4cea7d97.json",
+      "sha256": "a19a90498817b3667a71fb559d9a6a98b3d9cd10cd1f925744884d98ffac210b"
+    }
+  }
+}

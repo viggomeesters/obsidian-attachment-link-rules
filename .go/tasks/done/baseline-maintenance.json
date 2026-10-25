@@ -1,0 +1,132 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "agent",
+  "shareable_delivery": "none",
+  "id": "baseline-maintenance",
+  "project": "obsidian-attachment-link-rules",
+  "status": "done",
+  "summary": "Onderhoud Attachment Link Rules vanuit nulmeting",
+  "description": "Nulmeting 25 oktober: herstel concrete release-/bouwproblemen en valideer bestaande werking. Geen publicatie, ODS-uitbreiding, YAML-editor, merge of publieke reacties. Geen functionele fout vooraf bewezen; pas alleen bewezen bouw-/documentatieonderhoud toe en toets bestaande fixtures.",
+  "scope": {
+    "read": [
+      "src",
+      "scripts",
+      "README.md"
+    ],
+    "modify": [
+      "src",
+      "scripts",
+      "tests",
+      "package.json",
+      "package-lock.json",
+      "esbuild.config.mjs",
+      "manifest.json",
+      "versions.json",
+      "main.js",
+      "styles.css",
+      "README.md",
+      "CHANGELOG.md",
+      "docs/VERIFICATION.md"
+    ]
+  },
+  "acceptance": [
+    "Geen functionele fout vooraf bewezen; pas alleen bewezen bouw-/documentatieonderhoud toe en toets bestaande fixtures.",
+    "Bestaande fixtures waar aanwezig, TypeScript-controle en productiebuild slagen; geen wijziging van bronbestanden of ongekozen features."
+  ],
+  "verification": [
+    "npm test",
+    "npx tsc --noEmit",
+    "npm run build"
+  ],
+  "claim": {
+    "agent": "codex",
+    "claimed_at": "2026-10-25T13:10:48+01:00",
+    "base_commit": "88dd7f73df2bd8e061eaed0c0527ff392bf3d33b"
+  },
+  "work_status": "completed",
+  "review_status": "approved",
+  "review_history": [
+    {
+      "created_at": "2026-10-25T13:24:38+01:00",
+      "agent": "codex",
+      "status": "approved",
+      "evidence": "Independent review of concrete source changes passed; executed content-bound checks passed. Local candidate only; no runtime or release certification.",
+      "transaction_id": "9aa1037ca0bb4c7d87895ec6a1889311"
+    }
+  ],
+  "evidence": [
+    {
+      "schema": "go-workflow.finish-evidence.v1",
+      "created_at": "2026-10-25T13:24:38+01:00",
+      "task_id": "baseline-maintenance",
+      "agent": "codex",
+      "summary": "verification=declared local tests, TypeScript and production build; result=PASS; critic=independent review_toml (independent gpt-6.1-sol medium) PASS; runtime=Codex API; self-reflect=PASS source repair reviewed; local maintenance candidate only, actual Obsidian acceptance and publication remain separate",
+      "changed_files": [
+        ".go/hierarchy.json",
+        ".go/runs/events.jsonl",
+        "CHANGELOG.md",
+        "esbuild.config.mjs",
+        "package.json",
+        "scripts/community-check.mjs",
+        ".go/runs/baseline-maintenance/changes.json",
+        ".go/runs/baseline-maintenance/closure-0.json",
+        ".go/runs/baseline-maintenance/completion-state.json",
+        ".go/runs/baseline-maintenance/completion/command-08f68cde2c7a458ca5d728ed1d415f55.json",
+        ".go/runs/baseline-maintenance/completion/command-1c1d423890174804ae980b8b443c91df.json",
+        ".go/runs/baseline-maintenance/completion/command-76a23b010d7c4c4a8750d7259a4c17ed.json",
+        ".go/runs/baseline-maintenance/completion/command-83b34e96310249d08d5ec016ef610027.json",
+        ".go/runs/baseline-maintenance/completion/command-d73ef35bd8304ca69c8c2b6a934e8959.json",
+        ".go/runs/baseline-maintenance/completion/command-db31dd703ebf4b1f8ff85c2756f65aa7.json",
+        ".go/runs/baseline-maintenance/completion/critic-960a55f450974e518e3c025ec771661f.json",
+        ".go/runs/baseline-maintenance/completion/verification-27feba92678b43d09311dd408caaab41.json",
+        ".go/runs/baseline-maintenance/completion/verification-b85b801423034b6882a95fc6328bb959.json",
+        ".go/runs/baseline-maintenance/final-verification-cli.json",
+        ".go/runs/baseline-maintenance/independent-review.json",
+        ".go/runs/baseline-maintenance/local-checks.json",
+        ".go/tasks/active/baseline-maintenance.json"
+      ],
+      "no_diff": false,
+      "git": {
+        "claim_base_commit": "88dd7f73df2bd8e061eaed0c0527ff392bf3d33b",
+        "observed_head_commit": "88dd7f73df2bd8e061eaed0c0527ff392bf3d33b"
+      },
+      "verification": {
+        "command": "declared local tests, TypeScript and production build",
+        "result": "PASS"
+      },
+      "runtime": {
+        "agent": "codex",
+        "runtime": "Codex API",
+        "model": null,
+        "billing_mode": "unknown"
+      },
+      "usage": {
+        "schema": "go-workflow.usage-attribution.v1",
+        "runtime_kind": "Codex API",
+        "billing_mode": "unknown",
+        "owner": "codex",
+        "model": null,
+        "token_estimate": null,
+        "api_equivalent_cost_usd": null,
+        "provider_invoice_cost_usd": null,
+        "cost_label": "api_equivalent_not_invoice_cost"
+      },
+      "review": {
+        "outcome": "independent review_toml (independent gpt-6.1-sol medium) PASS",
+        "skip_reason": null
+      }
+    }
+  ],
+  "completion_evidence": {
+    "schema": "go-workflow.completion-evidence.v1",
+    "verification": {
+      "path": ".go/runs/baseline-maintenance/completion/verification-b85b801423034b6882a95fc6328bb959.json",
+      "sha256": "b6c56053e55f6d99730b6950e9c9484be53be85a670e2fb0a48a8005345457d8"
+    },
+    "critic": {
+      "path": ".go/runs/baseline-maintenance/completion/critic-960a55f450974e518e3c025ec771661f.json",
+      "sha256": "6bb6d467511b084c3aefbe003c4184277aac1b84b528db104ce6456ad34c431e"
+    }
+  }
+}

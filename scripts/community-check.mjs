@@ -40,7 +40,7 @@ const checks = [
   [!lowerDescription.includes("obsidian"), "description avoids Obsidian"],
   [manifest.minAppVersion === "1.5.7", "minAppVersion covers the newest public API used"],
   [typeof manifest.isDesktopOnly === "boolean", "isDesktopOnly is boolean"],
-  [source.includes("registerDomEvent(workspaceDocument, \"drop\"") , "drop observation uses the active workspace document"],
+  [source.includes("registerDomEvent(doc, \"drop\"") , "drop observation uses the active workspace document"],
   [!source.includes('workspace.on("editor-drop"'), "does not consume or override the native editor-drop event"],
   [!source.includes("detachLeavesOfType"), "does not detach leaves in onunload"],
   [!source.includes("revealLeaf("), "does not use revealLeaf"],
@@ -64,8 +64,8 @@ async function checkCommunityDirectory() {
   const plugins = await fetchJson("https://raw.githubusercontent.com/obsidianmd/obsidian-releases/master/community-plugins.json");
   const rawIdMatch = plugins.find((plugin) => plugin.id === manifest.id);
   const rawNameMatch = plugins.find((plugin) => plugin.name?.toLowerCase() === lowerName);
-  if (rawIdMatch && rawIdMatch.repo !== expectedRepo) failures.push(`community directory already has id ${manifest.id}`);
-  if (rawNameMatch && rawNameMatch.repo !== expectedRepo) failures.push(`community directory already has name ${manifest.name}`);
+  if (rawIdMatch && rawIdMatch.repo !== expectedRepo.replace("https://github.com/", "")) failures.push(`community directory already has id ${manifest.id}`);
+  if (rawNameMatch && rawNameMatch.repo !== expectedRepo.replace("https://github.com/", "")) failures.push(`community directory already has name ${manifest.name}`);
   const html = await fetchText(`https://community.obsidian.md/plugins/${manifest.id}`);
   const isNotFound = html.includes("<title>Plugin not found</title>");
   if (!isNotFound && !html.includes(expectedRepo)) failures.push(`live community slug ${manifest.id} is already taken`);

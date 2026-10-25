@@ -1,0 +1,74 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "agent",
+  "shareable_delivery": "none",
+  "id": "runtime-release-acceptance",
+  "project": "obsidian-attachment-link-rules",
+  "status": "active",
+  "summary": "Praktijk- en releaseacceptatie onderhoudskandidaat",
+  "description": "Vervolg op onderhoud 25 oktober. Test exacte lokale bronkandidaat in ge\u00efsoleerde testvault: actuele stabiele Obsidian en manifestminimum, installatie/upgrade, fixtures leeg/ongeldig/groot, bronbehoud, instellingen en unload. Mobile/platforms alleen waar beloofd; bewijs per host. Sluit actuele offici\u00eble lintbevindingen aan en beoordeel; geen regels uitschakelen om groen te krijgen. Daarna lokale versie/asset/previewvoorbereiding binnen nieuwe concrete opdracht. Push/publicatie en zichtbare UI-bediening behouden aparte autorisatie. Huidige app1.13.7 is geen bewijs voor stabiel1.14.5.",
+  "scope": {
+    "read": [
+      "src",
+      "tests",
+      "scripts",
+      "manifest.json",
+      "versions.json",
+      "README.md",
+      "main.js",
+      "styles.css"
+    ],
+    "modify": [
+      "src",
+      "tests",
+      "scripts",
+      "package.json",
+      "package-lock.json",
+      "manifest.json",
+      "versions.json",
+      "main.js",
+      "styles.css",
+      "README.md",
+      "CHANGELOG.md",
+      "docs"
+    ]
+  },
+  "acceptance": [
+    "Exacte kandidaat heeft brongebonden lintbeoordeling en echte Obsidianversie-/platformbewijzen; ontbrekende checks blijven open.",
+    "Installatie/upgrade/unload en bronbehoud werkelijk gecontroleerd; geen push of publicatie zonder expliciete autorisatie."
+  ],
+  "verification": [
+    "npm run check"
+  ],
+  "claim": {
+    "agent": "codex",
+    "claimed_at": "2026-10-25T13:39:29+01:00",
+    "base_commit": "0916e94b761d83b6fffbb6562a1a033a347dfada"
+  },
+  "work_status": "in_progress",
+  "review_status": "none",
+  "review_history": [],
+  "evidence": [],
+  "progress": {
+    "as_of": "2026-10-25",
+    "source_commit": "0916e94b761d83b6fffbb6562a1a033a347dfada",
+    "actual_runtime": "Obsidian1.13.7 macOS arm64",
+    "proved": [
+      "load all26, unload/load twice",
+      "normal synthetic view where applicable; dedicated feature checks for non-viewers",
+      "123 fixture hashes unchanged"
+    ],
+    "remaining": [
+      "actual stable1.14.5, declared minimum and claimed mobile/platform tests",
+      "installation/upgrade and final release-specific fixture matrix",
+      "official lint disposition and current candidate preview; version/assets preparation before any publication"
+    ],
+    "lint_summary": {
+      "errors": 0,
+      "warnings": 0,
+      "proof": ".go/runs/runtime-release-acceptance/official-lint.json"
+    },
+    "publication": "Not authorized, no push or release performed"
+  }
+}

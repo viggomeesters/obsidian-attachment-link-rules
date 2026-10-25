@@ -3,9 +3,13 @@ export type DropAction = "link" | "embed" | "default";
 export interface AttachmentLinkRuleSettings {
   linkExtensions: string;
   embedExtensions: string;
+  unlistedAction?: "default" | "link";
 }
 
+export const FORMAT_EVENT = "attachment-link-rules:format-v1";
+
 export const DEFAULT_SETTINGS: AttachmentLinkRuleSettings = {
+  unlistedAction: "default",
   linkExtensions: "pdf doc docx xls xlsx ppt pptx zip 7z rar",
   embedExtensions: "png jpg jpeg gif webp svg avif bmp mp3 wav m4a ogg flac mp4 webm mov",
 };
@@ -23,6 +27,7 @@ export function normalizeSettings(
   value: Partial<AttachmentLinkRuleSettings> | null | undefined,
 ): AttachmentLinkRuleSettings {
   return {
+    unlistedAction: value?.unlistedAction === "link" ? "link" : "default",
     linkExtensions: normalizeExtensionList(value?.linkExtensions ?? DEFAULT_SETTINGS.linkExtensions).join(" "),
     embedExtensions: normalizeExtensionList(value?.embedExtensions ?? DEFAULT_SETTINGS.embedExtensions).join(" "),
   };
@@ -40,7 +45,7 @@ export function actionForFileName(
   settings: AttachmentLinkRuleSettings,
 ): DropAction {
   const extension = extensionFromFileName(fileName);
-  if (!extension) return "default";
+  if (!extension) return settings.unlistedAction === "link" ? "link" : "default";
 
   const linkExtensions = new Set(normalizeExtensionList(settings.linkExtensions));
   if (linkExtensions.has(extension)) return "link";
@@ -48,7 +53,7 @@ export function actionForFileName(
   const embedExtensions = new Set(normalizeExtensionList(settings.embedExtensions));
   if (embedExtensions.has(extension)) return "embed";
 
-  return "default";
+  return settings.unlistedAction === "link" ? "link" : "default";
 }
 
 export function applyDropAction(markdownLink: string, action: DropAction): string {
@@ -178,4 +183,14 @@ function commonSuffixLength(left: string, right: string, prefixLength: number): 
     length += 1;
   }
   return length;
+}
+
+/** Optional synchronous formatting protocol for importers; no attachment I/O. */
+export function formatAttachmentRequest(input: unknown, settings: AttachmentLinkRuleSettings): boolean {
+  if (!input || typeof input !== "object") return false;
+  const request = input as Record<string, unknown>;
+  if (request.version !== 1 || request.handled !== false || typeof request.fileName !== "string" || typeof request.link !== "string") return false;
+  request.link = applyDropAction(request.link, actionForFileName(request.fileName, settings));
+  request.handled = true;
+  return true;
 }

@@ -1,0 +1,53 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "agent",
+  "shareable_delivery": "none",
+  "id": "publish-cooperation",
+  "project": "obsidian-attachment-link-rules",
+  "status": "active",
+  "summary": "Deliver attachment cooperation on public main and release 0.2.0",
+  "description": "Deliver attachment cooperation on public main and release 0.2.0",
+  "scope": {
+    "read": [
+      "src",
+      "scripts",
+      "docs"
+    ],
+    "modify": [
+      "src",
+      "scripts",
+      "tests",
+      "docs",
+      "assets",
+      "README.md",
+      "CHANGELOG.md",
+      "package.json",
+      "package-lock.json",
+      "manifest.json",
+      "versions.json",
+      "main.js",
+      ".gitignore",
+      "eslint.config.mjs",
+      "tsconfig.json",
+      "AGENTS.md",
+      "SECURITY.md",
+      "CONTRIBUTING.md"
+    ]
+  },
+  "acceptance": [
+    "Reviewed maintenance/cooperation source integrated in public main, plain npm ci and npm check pass, tag0.2.0 matches manifest and release assets; Community preview/release reviewed and downloads verified without exposing local test logs."
+  ],
+  "verification": [
+    "npm run check"
+  ],
+  "claim": {
+    "agent": "codex",
+    "claimed_at": "2026-10-25T14:23:19+01:00",
+    "base_commit": "fd188d6e9f17c565b722624aba09f551801378d3"
+  },
+  "work_status": "in_progress",
+  "review_status": "none",
+  "review_history": [],
+  "evidence": []
+}

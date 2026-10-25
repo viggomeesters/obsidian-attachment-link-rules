@@ -24,3 +24,7 @@ A release is accepted only when:
 - the tag exactly equals the manifest version;
 - release assets are exactly `main.js`, `manifest.json`, and `styles.css`;
 - downloaded release assets match the repository copies.
+
+## macOS cooperation acceptance
+
+Release 0.2.0 was also exercised with Mail Drop 0.10.0 in a separate Obsidian 1.13.7 vault on macOS arm64: 115 synthetic DOM checks passed, including both load orders, slow I/O, concurrent edits, Wiki/Markdown syntax, original bytes, email previews, unload, standalone rules and missing-provider fallback. The generic runner is `scripts/cooperation-smoke.mjs` in the Mail Drop repository; it requires an explicitly marked test vault. This does not claim a new real mail-provider drag, mobile test, runtime on the declared minimum, or Obsidian 1.14.5 runtime. The Windows commands above are a separate supported test route.
