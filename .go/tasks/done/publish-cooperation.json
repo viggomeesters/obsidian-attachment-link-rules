@@ -1,0 +1,118 @@
+{
+  "schema": "go-workflow.repo-local.task.v1",
+  "kind": "task",
+  "execution_mode": "agent",
+  "shareable_delivery": "none",
+  "id": "publish-cooperation",
+  "project": "obsidian-attachment-link-rules",
+  "status": "done",
+  "summary": "Deliver attachment cooperation on public main and release 0.2.0",
+  "description": "Deliver attachment cooperation on public main and release 0.2.0",
+  "scope": {
+    "read": [
+      "src",
+      "scripts",
+      "docs"
+    ],
+    "modify": [
+      "src",
+      "scripts",
+      "tests",
+      "docs",
+      "assets",
+      "README.md",
+      "CHANGELOG.md",
+      "package.json",
+      "package-lock.json",
+      "manifest.json",
+      "versions.json",
+      "main.js",
+      ".gitignore",
+      "eslint.config.mjs",
+      "tsconfig.json",
+      "AGENTS.md",
+      "SECURITY.md",
+      "CONTRIBUTING.md"
+    ]
+  },
+  "acceptance": [
+    "Reviewed maintenance/cooperation source integrated in public main, plain npm ci and npm check pass, tag0.2.0 matches manifest and release assets; Community preview/release reviewed and downloads verified without exposing local test logs."
+  ],
+  "verification": [
+    "npm run check"
+  ],
+  "claim": {
+    "agent": "codex",
+    "claimed_at": "2026-10-25T14:23:19+01:00",
+    "base_commit": "fd188d6e9f17c565b722624aba09f551801378d3"
+  },
+  "work_status": "completed",
+  "review_status": "review",
+  "review_history": [],
+  "evidence": [
+    {
+      "schema": "go-workflow.finish-evidence.v1",
+      "created_at": "2026-10-25T14:40:05+01:00",
+      "task_id": "publish-cooperation",
+      "agent": "codex",
+      "summary": "verification=npm run check and plain npm ci; result=passed,15 tests and zero audit vulnerabilities; critic=codex same_agent source recheck passed plus official source preview and full release review Completed, Dependencies Pass, byte-for-byte Build verification Pass; changed_files=src/core.ts,src/main.ts,tests/cooperation.test.mjs,README.md,CHANGELOG.md,docs/local-validation.md,scripts/community-check.mjs,package.json,package-lock.json,manifest.json,versions.json,main.js,esbuild.config.mjs,.gitignore; runtime=Codex; publication=public main and tag0.2.0 at59a6581, exact three assets anonymously HTTP200 downloaded and hash matched; installation=actual fresh Community install0.2.0 payload plus exact app nosourcemap marker,115 actual Obsidian paired synthetic checks passed; rollback=retain0.1.1; self_reflect=local integration is distinct from public main release and actual installation, central approach corrected; limits=no new mobile or declared-minimum runtime claim, no Actions for attestation recommendation",
+      "changed_files": [
+        "src/core.ts",
+        "src/main.ts",
+        "tests/cooperation.test.mjs",
+        "README.md",
+        "CHANGELOG.md",
+        "docs/local-validation.md",
+        "scripts/community-check.mjs",
+        "package.json",
+        "package-lock.json",
+        "manifest.json",
+        "versions.json",
+        "main.js",
+        "esbuild.config.mjs",
+        ".gitignore"
+      ],
+      "no_diff": false,
+      "git": {
+        "claim_base_commit": "fd188d6e9f17c565b722624aba09f551801378d3",
+        "observed_head_commit": "f218727b9a7a448c62d28181189ceeb87bda7a7e"
+      },
+      "verification": {
+        "command": "npm run check and plain npm ci",
+        "result": "passed,15 tests and zero audit vulnerabilities"
+      },
+      "runtime": {
+        "agent": "codex",
+        "runtime": "Codex",
+        "model": null,
+        "billing_mode": "unknown"
+      },
+      "usage": {
+        "schema": "go-workflow.usage-attribution.v1",
+        "runtime_kind": "Codex",
+        "billing_mode": "unknown",
+        "owner": "codex",
+        "model": null,
+        "token_estimate": null,
+        "api_equivalent_cost_usd": null,
+        "provider_invoice_cost_usd": null,
+        "cost_label": "api_equivalent_not_invoice_cost"
+      },
+      "review": {
+        "outcome": "codex same_agent source recheck passed plus official source preview and full release review Completed, Dependencies Pass, byte-for-byte Build verification Pass",
+        "skip_reason": null
+      }
+    }
+  ],
+  "completion_evidence": {
+    "schema": "go-workflow.completion-evidence.v1",
+    "verification": {
+      "path": ".go/runs/publish-cooperation/completion/verification-c4b3290bd6d84c91b125c5e10bc1aa26.json",
+      "sha256": "cbf6a6a9031d49e2fa4256fddb48426595e4aadd6c4e52848bd4462274e4e501"
+    },
+    "critic": {
+      "path": ".go/runs/publish-cooperation/completion/critic-cf8b856faba84845bc768cd9337ff471.json",
+      "sha256": "f65db7cf476c73a882fa96ce5c1846fb4facf4b7c3b88f0e0e989ad865bfdf7f"
+    }
+  }
+}
