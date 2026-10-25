@@ -40,7 +40,7 @@ const checks = [
   [!lowerDescription.includes("obsidian"), "description avoids Obsidian"],
   [manifest.minAppVersion === "1.5.7", "minAppVersion covers the newest public API used"],
   [typeof manifest.isDesktopOnly === "boolean", "isDesktopOnly is boolean"],
-  [source.includes("registerDomEvent(doc, \"drop\"") , "drop observation uses the active workspace document"],
+  [source.includes('this.registerDomEvent(doc, "drop",') && source.includes("registerFormatter(workspaceDocument)") && source.includes('this.app.workspace.on("window-open"'), "drop observation covers the workspace and popout documents"],
   [!source.includes('workspace.on("editor-drop"'), "does not consume or override the native editor-drop event"],
   [!source.includes("detachLeavesOfType"), "does not detach leaves in onunload"],
   [!source.includes("revealLeaf("), "does not use revealLeaf"],
