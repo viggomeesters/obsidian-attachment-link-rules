@@ -1,212 +1,162 @@
 #!/usr/bin/env node
-import { spawnSync } from "node:child_process";
-import fs from "node:fs/promises";
-import os from "node:os";
+import { execFileSync } from "node:child_process";
+import fs from "node:fs";
 import path from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 
-const DEFAULT_PORT = 9222;
-const PLUGIN_ID = "attachment-link-rules";
-const TEST_VAULT_NAME = "obsidian-test-vault";
+const args = process.argv.slice(2);
+const vaultRoot = path.resolve(args[args.indexOf("--vault") + 1] || "");
+const reportArgument = args.indexOf("--report");
+if (!args.includes("--vault") || reportArgument < 0 || !args[reportArgument + 1]) {
+  throw new Error("Pass --vault <marked obsidian-test-vault> --report <local report.json>.");
+}
+const reportFile = path.resolve(args[reportArgument + 1]);
+if (path.basename(vaultRoot) !== "obsidian-test-vault" || !fs.existsSync(path.join(vaultRoot, ".mail-drop-test-vault"))) {
+  throw new Error("Refusing an unmarked or nonstandard test vault.");
+}
+fs.mkdirSync(path.dirname(reportFile), { recursive: true });
+if (fs.existsSync(reportFile)) throw new Error("Report already exists; choose a fresh path.");
 
-async function main() {
-  if (shouldDelegateToWindowsNode()) {
-    runWithWindowsNode();
-    return;
-  }
-
-  const args = parseArgs(process.argv.slice(2));
-  const port = Number(args.port ?? process.env.OBSIDIAN_CDP_PORT ?? DEFAULT_PORT);
-  const host = String(args.host ?? process.env.OBSIDIAN_CDP_HOST ?? "127.0.0.1");
-  const screenshotPath = String(args.screenshot ?? `/tmp/${PLUGIN_ID}-smoke-${timestampForFile()}.png`);
-
+// Obsidian's supported CLI executes this host-specific JS in its actual renderer.
+async function acceptance(config) {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const report = { realObsidian: true, appVersion: config.appVersion, realProviderDrag: false, nativeInsertionSimulated: true, checks: {} };
+  const check = (name, ok) => { report.checks[name] = !!ok; if (!ok) throw Error(name); };
+  const id = "attachment-link-rules";
+  const mailId = "outlook-drop-importer";
+  let leaf;
+  let data;
+  const dataPath = path.join(config.vaultRoot, ".obsidian/plugins", id, "data.json");
+  const active = app.workspace.activeLeaf;
+  const originallyEnabled = app.plugins.enabledPlugins.has(id);
+  const mailEnabled = app.plugins.enabledPlugins.has(mailId);
+  const contents = require("electron").remote.getCurrentWebContents();
+  const backgroundThrottling = contents.getBackgroundThrottling();
   try {
-    const target = await findObsidianTarget(host, port);
-    const client = await CdpClient.connect(target.webSocketDebuggerUrl);
-    try {
-      await client.send("Runtime.enable");
-      await client.send("Page.enable").catch(() => undefined);
-      const result = await evaluateSmoke(client);
-      if (!result.ok) throw new Error(result.error ?? "Runtime smoke returned ok=false");
-      const screenshot = await client.send("Page.captureScreenshot", { format: "png", captureBeyondViewport: false });
-      await fs.mkdir(path.dirname(screenshotPath), { recursive: true });
-      await fs.writeFile(screenshotPath, Buffer.from(screenshot.data, "base64"));
-      result.screenshot = screenshotPath;
-      await client.send("Runtime.evaluate", {
-        expression: `(async () => { const file = window.app?.vault?.getAbstractFileByPath(${JSON.stringify("plugin-smoke/attachment-link-rules-smoke.md")}); if (file) await window.app.fileManager.trashFile(file); return true; })()`,
-        awaitPromise: true,
-        returnByValue: true,
-      }).catch(() => undefined);
-      console.log(JSON.stringify(result, null, 2));
-    } finally {
-      client.close();
+    check("standard-isolated-vault", app.vault.adapter.getBasePath() === config.vaultRoot);
+    // Run a hidden test pane without macOS focus changes or timer-budget delays.
+    contents.setBackgroundThrottling(false);
+    check("plugin-enabled", originallyEnabled);
+    data = fs.existsSync(dataPath) ? fs.readFileSync(dataPath) : null;
+    if (mailEnabled) await app.plugins.disablePlugin(mailId);
+    const p = app.plugins.plugins[id];
+    report.pluginVersion = p.manifest.version;
+    p.settings = { linkExtensions: "pdf", embedExtensions: "png", unlistedAction: "default" };
+    await p.saveSettings();
+    await app.plugins.disablePlugin(id); await app.plugins.enablePlugin(id);
+    check("settings-survive-reload", app.plugins.plugins[id].settings.linkExtensions === "pdf");
+    const folder = "fixtures/attachment-link-rules/acceptance-" + Date.now();
+    await app.vault.createFolder(folder);
+    const note = await app.vault.create(folder + "/target.md", "# Acceptance\n");
+    leaf = app.workspace.getLeaf("tab");
+    if (active) app.workspace.setActiveLeaf(active, { focus: false });
+    await leaf.openFile(note, { active: false });
+    await leaf.setViewState({ type: "markdown", state: { file: note.path, mode: "source" }, active: false });
+    check("active-note-preserved", app.workspace.activeLeaf === active);
+    const view = leaf.view;
+    const editor = view.editor;
+    check("real-editor-available", !!editor);
+    const emit = names => {
+      const dt = new DataTransfer();
+      for (const name of names) dt.items.add(new File([new Uint8Array()], name));
+      // Observe a real renderer drop, then control native-completion timing.
+      // Stop native storage here; the test writes through the public Vault API.
+      view.contentEl.addEventListener("drop", event => { event.preventDefault(); event.stopPropagation(); }, { capture: true, once: true });
+      const event = new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer: dt });
+      view.contentEl.dispatchEvent(event);
+      return event;
+    };
+    const append = value => {
+      const end = editor.offsetToPos(editor.getValue().length);
+      editor.replaceRange(value, end);
+    };
+    for (const [name, bytes] of [
+      ["empty.pdf", new Uint8Array()],
+      ["invalid.pdf", Uint8Array.from([0, 255, 1, 2, 3])],
+      ["large.pdf", new Uint8Array(16 * 1024 * 1024).fill(37)],
+    ]) {
+      editor.setValue("Human text ![[old.pdf]]\n"); await wait(50);
+      emit([name]);
+      const file = await app.vault.createBinary(folder + "/" + name, bytes.buffer);
+      if (name === "large.pdf") await wait(1500);
+      const link = app.fileManager.generateMarkdownLink(file, note.path).replace(/^!/, "");
+      append("!" + link); await wait(350);
+      check(name + "-syntax", editor.getValue().includes(link) && !editor.getValue().includes("!" + link));
+      check(name + "-old-link-preserved", editor.getValue().includes("![[old.pdf]]"));
+      check(name + "-exact-bytes", Buffer.from(await app.vault.readBinary(file)).equals(Buffer.from(bytes)));
     }
-  } catch (error) {
-    console.error(formatFailure(error, host, port));
-    process.exit(1);
-  }
-}
-
-function shouldDelegateToWindowsNode() {
-  return process.platform === "linux"
-    && os.release().toLowerCase().includes("microsoft")
-    && !process.env.ATTACHMENT_LINK_RULES_CDP_WINDOWS_NODE;
-}
-
-function runWithWindowsNode() {
-  const converted = spawnSync("wslpath", ["-w", path.resolve(process.argv[1])], { encoding: "utf8" });
-  if (converted.status !== 0) throw new Error(`wslpath failed: ${converted.stderr || converted.stdout}`);
-  const command = `$env:ATTACHMENT_LINK_RULES_CDP_WINDOWS_NODE='1'; node ${[converted.stdout.trim(), ...process.argv.slice(2)].map(quotePowerShellString).join(", ")}`;
-  const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", command], { stdio: "inherit" });
-  process.exit(result.status ?? 1);
-}
-
-function quotePowerShellString(value) {
-  return `'${String(value).replaceAll("'", "''")}'`;
-}
-
-function parseArgs(values) {
-  const parsed = {};
-  for (let index = 0; index < values.length; index += 1) {
-    const value = values[index];
-    if (value === "--port" || value === "--host" || value === "--screenshot") parsed[value.slice(2)] = values[++index];
-    else throw new Error(`Unknown argument: ${value}`);
-  }
-  return parsed;
-}
-
-async function findObsidianTarget(host, port) {
-  const response = await fetch(`http://${host}:${port}/json/list`);
-  if (!response.ok) throw new Error(`CDP endpoint returned ${response.status} ${response.statusText}`);
-  const targets = await response.json();
-  const pages = targets.filter((target) => target.type === "page" && target.webSocketDebuggerUrl);
-  const obsidian = pages.find((target) => /obsidian/i.test(`${target.title} ${target.url}`)) ?? pages[0];
-  if (!obsidian) throw new Error("No CDP page target found");
-  return obsidian;
-}
-
-async function evaluateSmoke(client) {
-  const expression = `(${browserSmoke.toString()})(${JSON.stringify({ pluginId: PLUGIN_ID, testVaultName: TEST_VAULT_NAME })})`;
-  const response = await client.send("Runtime.evaluate", {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
-    timeout: 60_000,
-  });
-  if (response.exceptionDetails) throw new Error(response.exceptionDetails.exception?.description ?? response.exceptionDetails.text);
-  return response.result.value;
-}
-
-async function browserSmoke(config) {
-  const sleep = (milliseconds) => new Promise((resolve) => window.setTimeout(resolve, milliseconds));
-  const assert = (condition, message, details = {}) => {
-    if (!condition) {
-      const error = new Error(message);
-      error.details = details;
-      throw error;
+    editor.setValue("x ![[old.pdf]] end"); await wait(50);
+    emit(["new.pdf"]);
+    editor.setValue("typed x ![[old.pdf]] end ![[new.pdf]]"); await wait(350);
+    check("concurrent-edit-preservation", editor.getValue() === "typed x ![[old.pdf]] end [[new.pdf]]");
+    editor.setValue(""); await wait(50); emit(["slow.pdf"]);
+    append("[[typed.png]]"); await wait(350);
+    check("manual-link-not-captured", editor.getValue() === "[[typed.png]]");
+    await wait(1500); append(" ![[slow.pdf]]"); await wait(350);
+    check("slow-drop-still-pending", editor.getValue() === "[[typed.png]] [[slow.pdf]]");
+    editor.setValue(""); await wait(50); emit(["one.pdf", "two.pdf"]);
+    append("![[one.pdf]]"); await wait(350); await wait(1500);
+    append(" ![[two.pdf]]"); await wait(350);
+    check("multi-file-delayed-insertion", editor.getValue() === "[[one.pdf]] [[two.pdf]]");
+    append(" ![[typed-after.pdf]]"); await wait(100);
+    check("completed-drop-does-not-capture-typing", editor.getValue().endsWith("![[typed-after.pdf]]"));
+    editor.setValue(""); await wait(50); emit(["unloaded.pdf"]);
+    await app.plugins.disablePlugin(id); append("![[unloaded.pdf]]"); await wait(100);
+    check("unload-cancels-pending-drop", editor.getValue() === "![[unloaded.pdf]]");
+    await app.plugins.enablePlugin(id);
+    check("reload-after-unload", !!app.plugins.plugins[id]);
+    const request = { version: 1, fileName: "cooperative.pdf", link: "![[cooperative.pdf]]", handled: false };
+    view.contentEl.ownerDocument.dispatchEvent(new CustomEvent("attachment-link-rules:format-v1", { detail: request }));
+    check("cooperative-formatter", request.handled && request.link === "[[cooperative.pdf]]");
+    editor.setValue(""); await wait(50);
+    const managed = emit(["managed.pdf"]);
+    view.contentEl.ownerDocument.dispatchEvent(new CustomEvent("attachment-link-rules:managed-drop-v1", { detail: { version: 1, event: managed } }));
+    append("![[managed.pdf]]"); await wait(350);
+    check("managed-drop-not-rewritten", editor.getValue() === "![[managed.pdf]]");
+    report.passed = true;
+  } catch (error) { report.passed = false; report.error = String(error); }
+  finally {
+    const restore = async (name, action) => {
+      try { await action(); report.checks[name] = true; }
+      catch (error) {
+        report.checks[name] = false; report.passed = false;
+        (report.restorationErrors ??= []).push(name + ": " + String(error));
+      }
+    };
+    if (data !== undefined) {
+      await restore("cleanup-plugin-unloaded", () => app.plugins.disablePlugin(id));
+      await restore("settings-bytes-restored", () => {
+        if (data === null) fs.rmSync(dataPath, { force: true }); else fs.writeFileSync(dataPath, data);
+        if (!(data === null ? !fs.existsSync(dataPath) : fs.readFileSync(dataPath).equals(data))) throw Error("settings differ");
+      });
+      await restore("plugin-state-restored", async () => {
+        if (originallyEnabled) await app.plugins.enablePlugin(id);
+      });
+      await restore("mail-state-restored", async () => {
+        if (mailEnabled && !app.plugins.enabledPlugins.has(mailId)) await app.plugins.enablePlugin(mailId);
+      });
     }
-  };
-
-  let app = window.app;
-  for (let attempt = 0; attempt < 30 && !app?.vault; attempt += 1) {
-    await sleep(500);
-    app = window.app;
-  }
-  assert(app?.vault && app?.workspace, "App object is unavailable after waiting for vault startup");
-  const vaultName = app.vault.getName?.() ?? "";
-  assert(vaultName === config.testVaultName, "Wrong vault is open", { vaultName });
-  const plugin = app.plugins?.plugins?.[config.pluginId];
-  assert(plugin, "Plugin is not loaded", { enabled: Array.from(app.plugins?.enabledPlugins ?? []) });
-
-  const folder = "plugin-smoke";
-  const path = `${folder}/attachment-link-rules-smoke.md`;
-  for (const staleLeaf of app.workspace.getLeavesOfType("folder-sort-view")) staleLeaf.detach();
-  if (!app.vault.getAbstractFileByPath(folder)) await app.vault.createFolder(folder);
-  const existing = app.vault.getAbstractFileByPath(path);
-  if (existing) await app.fileManager.trashFile(existing);
-  const file = await app.vault.create(path, "# Attachment Link Rules smoke\n");
-  const leaf = app.workspace.getLeaf(false);
-  await leaf.openFile(file);
-  await sleep(300);
-  const editor = leaf.view?.editor;
-  assert(editor, "Markdown editor did not open");
-
-  editor.setValue("# Attachment Link Rules smoke\n");
-  document.dispatchEvent(new DragEvent("drop", { bubbles: true, cancelable: true }));
-  editor.replaceRange("![[report.pdf]]", editor.getCursor());
-  await sleep(750);
-  const pdfText = editor.getValue();
-  assert(pdfText.includes("[[report.pdf]]"), "PDF link was not inserted", { pdfText });
-  assert(!pdfText.includes("![[report.pdf]]"), "PDF embed marker was not removed", { pdfText });
-
-  const imageBefore = editor.getValue();
-  assert(typeof plugin.scheduleRewrite === "function", "Runtime rewrite method is unavailable");
-  plugin.scheduleRewrite(editor, imageBefore, 0);
-  editor.replaceRange("[[diagram.png]]", editor.getCursor());
-  await sleep(750);
-  const imageText = editor.getValue();
-  assert(imageText.includes("![[diagram.png]]"), "Image embed marker was not added", { imageText });
-
-  return {
-    ok: true,
-    vaultName,
-    pluginLoaded: true,
-    pdfRule: "link",
-    imageRule: "embed",
-    finalText: imageText,
-    fixturePath: path,
-  };
-}
-
-function timestampForFile() {
-  return new Date().toISOString().replace(/[:.]/g, "-");
-}
-
-function formatFailure(error, host, port) {
-  return [
-    `Runtime smoke failed: ${error?.message ?? error}`,
-    `Expected the test vault at http://${host}:${port}.`,
-    "Close any non-CDP app instance, then launch:",
-    `powershell.exe -NoProfile -Command 'Start-Process "$env:LOCALAPPDATA\\Programs\\Obsidian\\Obsidian.exe" -ArgumentList "--remote-debugging-port=${port}","obsidian://open?vault=${TEST_VAULT_NAME}"'`,
-  ].join("\n");
-}
-
-class CdpClient {
-  static connect(url) {
-    return new Promise((resolve, reject) => {
-      const socket = new WebSocket(url);
-      const client = new CdpClient(socket);
-      socket.addEventListener("open", () => resolve(client), { once: true });
-      socket.addEventListener("error", () => reject(new Error("WebSocket connection failed")), { once: true });
+    await restore("test-tab-closed", () => { if (leaf) leaf.detach(); });
+    await restore("active-note-restored", () => {
+      if (active) app.workspace.setActiveLeaf(active, { focus: false });
+      if (app.workspace.activeLeaf !== active) throw Error("active note differs");
     });
-  }
-
-  constructor(socket) {
-    this.socket = socket;
-    this.nextId = 1;
-    this.pending = new Map();
-    socket.addEventListener("message", (event) => this.onMessage(event));
-  }
-
-  send(method, params = {}) {
-    const id = this.nextId++;
-    return new Promise((resolve, reject) => {
-      this.pending.set(id, { resolve, reject });
-      this.socket.send(JSON.stringify({ id, method, params }));
+    await restore("background-throttling-restored", () => {
+      contents.setBackgroundThrottling(backgroundThrottling);
+      if (contents.getBackgroundThrottling() !== backgroundThrottling) throw Error("timer policy differs");
     });
-  }
-
-  close() {
-    this.socket.close();
-  }
-
-  onMessage(event) {
-    const message = JSON.parse(event.data);
-    const pending = this.pending.get(message.id);
-    if (!pending) return;
-    this.pending.delete(message.id);
-    if (message.error) pending.reject(new Error(message.error.message));
-    else pending.resolve(message.result);
+    fs.writeFileSync(config.reportFile, JSON.stringify(report, null, 2));
   }
 }
-
-await main();
+const appVersion = execFileSync("obsidian", ["version"], { encoding: "utf8" }).trim();
+const code = `(${acceptance.toString()})(${JSON.stringify({ vaultRoot, reportFile, appVersion })}).catch(error => require('node:fs').writeFileSync(${JSON.stringify(reportFile)}, JSON.stringify({passed:false,error:String(error),stack:error.stack})))`;
+const cliResult = execFileSync("obsidian", [`vault=${path.basename(vaultRoot)}`, "eval", `code=${code}`], { timeout: 60_000, encoding: "utf8" });
+console.log(cliResult);
+if (cliResult.startsWith("Error:")) throw new Error("Obsidian rejected the acceptance script.");
+for (let i = 0; i < 240 && !fs.existsSync(reportFile); i++) await delay(250);
+if (!fs.existsSync(reportFile)) throw new Error("The host did not produce its report.");
+const report = JSON.parse(fs.readFileSync(reportFile, "utf8"));
+console.log(JSON.stringify(report, null, 2));
+if (!report.passed || Object.values(report.checks).some(value => !value)) process.exit(1);

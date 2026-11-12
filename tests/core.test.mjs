@@ -11,6 +11,7 @@ import {
   normalizeExtensionList,
   normalizeSettings,
   rewriteInsertedAttachmentSyntax,
+  matchesDroppedFileName,
 } from "../dist/core.mjs";
 
 test("PDF files default to non-embedded links", () => {
@@ -99,4 +100,43 @@ test("settings tab exposes searchable definitions without calling deprecated dis
 
   assert.match(source, /getSettingDefinitions\(\): SettingDefinitionItem\[\]/);
   assert.doesNotMatch(source, /this\.display\(\)/);
+});
+
+test("concurrent edits preserve a pre-existing attachment while formatting a new drop", () => {
+  assert.deepEqual(
+    rewriteInsertedAttachmentSyntax("x ![[old.pdf]] end", "typed x ![[old.pdf]] end ![[new.pdf]]", DEFAULT_SETTINGS),
+    { changed: true, text: "typed x ![[old.pdf]] end [[new.pdf]]" },
+  );
+});
+
+test("ambiguous duplicate links in disjoint edits never rewrite an existing attachment", () => {
+  const after = "typed x ![[old.pdf]] end ![[old.pdf]]";
+  assert.deepEqual(
+    rewriteInsertedAttachmentSyntax("x ![[old.pdf]] end", after, DEFAULT_SETTINGS),
+    { changed: false, text: after },
+  );
+});
+
+test("drop attribution accepts native destinations and numbered collisions only", () => {
+  for (const target of ["report.pdf", "folder/report.pdf", "folder/report%201.pdf", "report (2).pdf"]) {
+    assert.equal(matchesDroppedFileName(target, ["report.pdf"]), true, target);
+  }
+  for (const target of ["typed.pdf", "report-old.pdf", "https://example.invalid/report.pdf"]) {
+    assert.equal(matchesDroppedFileName(target, ["report.pdf"]), false, target);
+  }
+  assert.equal(matchesDroppedFileName("a[1] (2).pdf", ["a[1].pdf"]), true);
+});
+
+test("identical-token prepend/append ambiguity preserves both occurrences", () => {
+  assert.deepEqual(
+    rewriteInsertedAttachmentSyntax("![[old.pdf]]", "![[old.pdf]]![[old.pdf]]", DEFAULT_SETTINGS),
+    { changed: false, text: "![[old.pdf]]![[old.pdf]]" },
+  );
+});
+
+test("an unambiguous duplicate after a distinct suffix can still be formatted", () => {
+  assert.deepEqual(
+    rewriteInsertedAttachmentSyntax("![[old.pdf]] tail", "![[old.pdf]] tail![[old.pdf]]", DEFAULT_SETTINGS),
+    { changed: true, text: "![[old.pdf]] tail[[old.pdf]]" },
+  );
 });

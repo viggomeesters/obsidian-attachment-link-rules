@@ -82,41 +82,65 @@ export function buildInsertedAttachmentEdit(
   after: string,
   settings: AttachmentLinkRuleSettings,
 ): InsertedAttachmentEdit | null {
-  if (before === after) return null;
+  return analyzeInsertedAttachments(before, after, settings).edit;
+}
+
+export function analyzeInsertedAttachments(
+  before: string,
+  after: string,
+  settings: AttachmentLinkRuleSettings,
+  acceptsFile?: (target: string) => boolean,
+): { edit: InsertedAttachmentEdit | null; insertedCount: number } {
+  if (before === after) return { edit: null, insertedCount: 0 };
+
+  const analyze = (fromOffset: number, toOffset: number, protectedLinks?: Set<string>, oldCounts = new Map<string, number>()) => {
+    const inserted = after.slice(fromOffset, toOffset);
+    let insertedCount = 0;
+    const replacement = rewriteAttachmentLinks(inserted, settings, protectedLinks, link => {
+      const remaining = oldCounts.get(link) ?? 0;
+      if (remaining > 0) oldCounts.set(link, remaining - 1);
+      else insertedCount += 1;
+    }, acceptsFile);
+    return {
+      edit: replacement === inserted ? null : { fromOffset, toOffset, replacement },
+      insertedCount,
+    };
+  };
 
   const insertionLength = after.length - before.length;
   if (insertionLength > 0) {
     const commonPrefix = commonPrefixLength(before, after);
     const earliestCandidate = Math.max(0, commonPrefix - insertionLength);
+    let candidate: number | null = null;
+    let validPositions = 0;
     for (let position = commonPrefix; position >= earliestCandidate; position -= 1) {
       const beforePrefix = before.slice(0, position);
       const beforeSuffix = before.slice(position);
       if (!after.startsWith(beforePrefix) || !after.endsWith(beforeSuffix)) continue;
 
-      const inserted = after.slice(position, position + insertionLength);
-      const rewritten = rewriteAttachmentLinks(inserted, settings);
-      if (rewritten !== inserted) {
-        return {
-          fromOffset: position,
-          toOffset: position + insertionLength,
-          replacement: rewritten,
-        };
+      validPositions += 1;
+      const result = analyze(position, position + insertionLength);
+      if (candidate === null && result.insertedCount > 0) candidate = position;
+      if (candidate !== null && validPositions > 1) {
+        const protectedLinks = new Set<string>();
+        rewriteAttachmentLinks(before, settings, undefined, link => { protectedLinks.add(link); });
+        return analyze(candidate, candidate + insertionLength, protectedLinks);
       }
     }
+    if (candidate !== null) return analyze(candidate, candidate + insertionLength);
   }
 
   const prefixLength = commonPrefixLength(before, after);
   const suffixLength = commonSuffixLength(before, after, prefixLength);
   const insertedEnd = after.length - suffixLength;
-  const inserted = after.slice(prefixLength, insertedEnd);
-  const rewritten = rewriteAttachmentLinks(inserted, settings);
-  if (rewritten === inserted) return null;
-
-  return {
-    fromOffset: prefixLength,
-    toOffset: insertedEnd,
-    replacement: rewritten,
-  };
+  // A disjoint edit can span unchanged old links. Protect every pre-existing
+  // token rather than guessing which identical occurrence came from the drop.
+  const protectedLinks = new Set<string>();
+  rewriteAttachmentLinks(before, settings, undefined, link => { protectedLinks.add(link); });
+  const oldCounts = new Map<string, number>();
+  rewriteAttachmentLinks(before.slice(prefixLength, before.length - suffixLength), settings, undefined,
+    link => { oldCounts.set(link, (oldCounts.get(link) ?? 0) + 1); }, acceptsFile);
+  return analyze(prefixLength, insertedEnd, protectedLinks, oldCounts);
 }
 
 export function rewriteInsertedAttachmentSyntax(
@@ -136,10 +160,16 @@ export function rewriteInsertedAttachmentSyntax(
 function rewriteAttachmentLinks(
   value: string,
   settings: AttachmentLinkRuleSettings,
+  protectedLinks?: Set<string>,
+  found?: (link: string) => void,
+  acceptsFile?: (target: string) => boolean,
 ): string {
   const withWikiLinks = value.replace(
     /(!?)\[\[([^\]|#]+)([^\]]*)\]\]/g,
     (match, _prefix: string, target: string) => {
+      if (acceptsFile && !acceptsFile(target)) return match;
+      found?.(match);
+      if (protectedLinks?.has(match)) return match;
       const action = actionForFileName(target, settings);
       return applyDropAction(match, action);
     },
@@ -149,10 +179,28 @@ function rewriteAttachmentLinks(
     /(!?)\[([^\]]*)\]\((<[^>]+>|[^)\s]+)([^)]*)\)/g,
     (match, _prefix: string, _label: string, rawTarget: string) => {
       const target = decodeLinkTarget(rawTarget);
+      if (acceptsFile && !acceptsFile(target)) return match;
+      found?.(match);
+      if (protectedLinks?.has(match)) return match;
       const action = actionForFileName(target, settings);
       return applyDropAction(match, action);
     },
   );
+}
+
+/** Match native destinations without reading or owning attachment storage. */
+export function matchesDroppedFileName(target: string, fileNames: string[]): boolean {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(target)) return false;
+  const name = decodeLinkTarget(target).split("/").pop()?.normalize("NFC").toLowerCase();
+  return fileNames.some(fileName => {
+    const original = fileName.normalize("NFC").toLowerCase();
+    if (name === original) return true;
+    const dot = original.lastIndexOf(".");
+    const stem = dot > 0 ? original.slice(0, dot) : original;
+    const extension = dot > 0 ? original.slice(dot) : "";
+    const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`^${escape(stem)} (?:[1-9]\\d*|\\([1-9]\\d*\\))${escape(extension)}$`).test(name ?? "");
+  });
 }
 
 function decodeLinkTarget(rawTarget: string): string {

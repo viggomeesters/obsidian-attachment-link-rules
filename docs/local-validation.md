@@ -7,13 +7,15 @@ This repository uses a deterministic local gate instead of GitHub Actions.
 ```bash
 npm ci
 npm run check
-npm run sync:test-vault
-npm run smoke:test-vault
+npm run sync:test-vault -- --target /absolute/path/to/obsidian-test-vault/.obsidian/plugins/attachment-link-rules
+npm run smoke:test-vault -- --vault /absolute/path/to/obsidian-test-vault --report /absolute/local/path/report.json
 ```
 
 `npm run check` runs formatting hygiene, the official `eslint-plugin-obsidianmd` recommended rules, TypeScript checking, behavior tests, the production build, manifest/version checks, and live Community id/name uniqueness checks.
 
-The runtime smoke loads the built plugin in the Windows-local `obsidian-test-vault`, proves the PDF link rule and image embed rule in the Electron renderer, and writes screenshot evidence.
+The runtime smoke uses the supported Obsidian CLI against an already open, marked `obsidian-test-vault`. Pass an explicit `--target` to `sync:test-vault` when using it; its historical default is Windows-specific. The smoke creates only new fixtures and a temporary test tab, restores the prior active note and exact settings bytes, and restores Electron's background-throttling policy. It does not detach unrelated views or replace an existing fixture. Its file insertion timing is controlled through real renderer drop/editor events and public Vault APIs; this is actual-host synthetic acceptance, not an OS drag or a mobile-device test.
+
+Current results and the historical review reconciliation are recorded in [the 12 November acceptance](runtime-acceptance-2026-11-12.md). Real-host checks include empty/malformed/16 MiB source files, byte preservation, delayed and multi-file insertions, concurrent edits, settings reload and unload. Do not infer an exact minimum-version or mobile-device test from this desktop run.
 
 ## Release gate
 

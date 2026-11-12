@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 — 2026-11-12
+
+- Observe delayed native file insertions for up to 60 seconds, instead of abandoning them after less than a second. Stop after the expected files, navigation, expiry or unload.
+- Attribute external insertions to the dropped filenames, including native numbered collisions; unrelated typed links are preserved.
+- Preserve pre-existing attachment syntax when typing and a drop change different parts of the note. Ambiguous identical links are left unchanged rather than guessing.
+- Replace the old runtime smoke with a background CLI test that restores settings, the active note and renderer timer policy.
+- Reconcile the already delivered acceptance/review records behind Issues #2 and #3 against their actual release evidence.
+
 ## 0.2.0 — 2026-10-25
 
 - Optional synchronous formatting and managed-drop events for cooperating importers.

@@ -14,15 +14,27 @@ import {
   DEFAULT_SETTINGS,
   FORMAT_EVENT,
   formatAttachmentRequest,
-  buildInsertedAttachmentEdit,
+  analyzeInsertedAttachments,
+  matchesDroppedFileName,
   normalizeSettings,
 } from "./core";
 
-const DROP_RETRY_DELAYS_MS = [0, 30, 100, 250, 500];
+const DROP_OBSERVATION_MS = 60_000;
+
+interface PendingDrop {
+  view: MarkdownView;
+  filePath: string | undefined;
+  before: string;
+  event: Event;
+  remaining: number;
+  fileNames: string[] | null;
+  expiry: number;
+  check: number | null;
+}
 
 export default class AttachmentLinkRulesPlugin extends Plugin {
   settings: AttachmentLinkRuleSettings = DEFAULT_SETTINGS;
-  private pendingTimers = new Set<number>();
+  private pendingDrops = new Map<Editor, PendingDrop>();
   private managedDrops = new WeakSet<Event>();
 
   async onload(): Promise<void> {
@@ -39,7 +51,7 @@ export default class AttachmentLinkRulesPlugin extends Plugin {
           if (leaf.view instanceof MarkdownView && event.target && leaf.view.containerEl.contains(event.target as Node)) view = leaf.view;
         });
         if (!view) return;
-        this.scheduleRewrite(view.editor, view.editor.getValue(), 0, event);
+        this.observeDrop(view, event);
       }, { capture: true });
       const handler = (event: Event): void => {
         formatAttachmentRequest((event as CustomEvent<unknown>).detail, this.settings);
@@ -62,12 +74,11 @@ export default class AttachmentLinkRulesPlugin extends Plugin {
     registerFormatter(workspaceDocument);
     this.app.workspace.iterateAllLeaves(leaf => registerFormatter(leaf.view.containerEl.ownerDocument));
     this.registerEvent(this.app.workspace.on("window-open", (_workspace, win) => registerFormatter(win.document)));
-
+    this.registerEvent(this.app.workspace.on("editor-change", editor => this.queueDropCheck(editor)));
   }
 
   onunload(): void {
-    this.pendingTimers.forEach((timer) => window.clearTimeout(timer));
-    this.pendingTimers.clear();
+    for (const editor of this.pendingDrops.keys()) this.stopObservingDrop(editor);
   }
 
   async loadSettings(): Promise<void> {
@@ -80,29 +91,63 @@ export default class AttachmentLinkRulesPlugin extends Plugin {
     await this.saveData(this.settings);
   }
 
-  private scheduleRewrite(editor: Editor, before: string, attempt: number, dropEvent: Event): void {
-    const delay = DROP_RETRY_DELAYS_MS[attempt];
-    if (delay === undefined) return;
+  private observeDrop(view: MarkdownView, event: Event): void {
+    const editor = view.editor;
+    const files = Array.from((event as DragEvent).dataTransfer?.files ?? []);
+    this.stopObservingDrop(editor);
+    this.pendingDrops.set(editor, {
+      view, filePath: view.file?.path, before: editor.getValue(), event,
+      remaining: Math.max(1, (event as DragEvent).dataTransfer?.files.length ?? 0),
+      fileNames: files.length > 0 ? files.map(file => file.name) : null,
+      expiry: window.setTimeout(() => this.stopObservingDrop(editor), DROP_OBSERVATION_MS),
+      check: null,
+    });
+    this.queueDropCheck(editor);
+  }
 
-    const timer = window.setTimeout(() => {
-      this.pendingTimers.delete(timer);
-      if (this.managedDrops.has(dropEvent)) return;
-      const after = editor.getValue();
-      const edit = buildInsertedAttachmentEdit(before, after, this.settings);
+  private queueDropCheck(editor: Editor): void {
+    const pending = this.pendingDrops.get(editor);
+    if (!pending) return;
+    if (pending.check !== null) window.clearTimeout(pending.check);
+    // Defer outside the editor-change transaction before calling replaceRange.
+    pending.check = window.setTimeout(() => this.checkPendingDrop(editor), 0);
+  }
 
-      if (edit) {
-        editor.replaceRange(
-          edit.replacement,
-          editor.offsetToPos(edit.fromOffset),
-          editor.offsetToPos(edit.toOffset),
-        );
-        return;
-      }
+  private checkPendingDrop(editor: Editor): void {
+    const pending = this.pendingDrops.get(editor);
+    if (!pending) return;
+    pending.check = null;
+    if (this.managedDrops.has(pending.event)
+      || pending.view.editor !== editor || pending.view.file?.path !== pending.filePath) {
+      this.stopObservingDrop(editor);
+      return;
+    }
+    const after = editor.getValue();
+    const { edit, insertedCount } = analyzeInsertedAttachments(pending.before, after, this.settings,
+      pending.fileNames ? target => matchesDroppedFileName(target, pending.fileNames ?? []) : undefined);
+    if (insertedCount === 0) {
+      pending.before = after;
+      // Internal vault/text drags may insert synchronously, but cannot justify
+      // observing unrelated typing after their first deferred check.
+      if (!pending.fileNames) this.stopObservingDrop(editor);
+      else pending.check = window.setTimeout(() => this.checkPendingDrop(editor), 250);
+      return;
+    }
+    pending.remaining -= insertedCount;
+    pending.before = edit
+      ? after.slice(0, edit.fromOffset) + edit.replacement + after.slice(edit.toOffset)
+      : after;
+    if (pending.remaining <= 0) this.stopObservingDrop(editor);
+    else pending.check = window.setTimeout(() => this.checkPendingDrop(editor), 250);
+    if (edit) editor.replaceRange(edit.replacement, editor.offsetToPos(edit.fromOffset), editor.offsetToPos(edit.toOffset));
+  }
 
-      this.scheduleRewrite(editor, before, attempt + 1, dropEvent);
-    }, delay);
-
-    this.pendingTimers.add(timer);
+  private stopObservingDrop(editor: Editor): void {
+    const pending = this.pendingDrops.get(editor);
+    if (!pending) return;
+    window.clearTimeout(pending.expiry);
+    if (pending.check !== null) window.clearTimeout(pending.check);
+    this.pendingDrops.delete(editor);
   }
 }
 
