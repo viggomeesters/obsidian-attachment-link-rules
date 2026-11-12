@@ -14,8 +14,8 @@
 ```bash
 npm ci
 npm run check
-npm run sync:test-vault
-npm run smoke:test-vault
+npm run sync:test-vault -- --target /absolute/path/to/obsidian-test-vault/.obsidian/plugins/attachment-link-rules
+npm run smoke:test-vault -- --vault /absolute/path/to/obsidian-test-vault --report /absolute/local/path/report.json
 ```
 
 The checker verifies manifest/package/lock/version alignment, allowed id and name formats, description wording, settings-heading rules, unsupported API boundaries, forbidden lifecycle calls, required public files, and live id/name uniqueness in the Community directory.

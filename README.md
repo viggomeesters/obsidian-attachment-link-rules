@@ -31,6 +31,8 @@ The app performs its normal drop operation first, including choosing the attachm
 
 This avoids private editor internals and avoids reimplementing attachment storage.
 
+External drops are observed for up to 60 seconds so slower copies can finish. Only inserted links matching the dropped filenames or native numbered duplicates are considered. Internal vault/text drops get a single deferred check. Existing links are protected when other edits happen at the same time; if identical links make attribution ambiguous, their syntax is retained. Changing files, unloading the plugin or completing the expected insertions ends observation.
+
 ## Installation
 
 Install from the Community directory, or copy the three release files for a manual test-vault installation. No package manager or external service is required at runtime.
@@ -83,13 +85,13 @@ npm run typecheck
 npm test
 npm run build
 npm run community:check
-npm run sync:test-vault
-npm run smoke:test-vault
+npm run sync:test-vault -- --target /absolute/path/to/obsidian-test-vault/.obsidian/plugins/attachment-link-rules
+npm run smoke:test-vault -- --vault /absolute/path/to/obsidian-test-vault --report /absolute/local/path/report.json
 ```
 
 `npm run check` runs the complete local source and Community preflight. GitHub Actions are intentionally not required; the repository's deterministic gate is documented in [Local validation](docs/local-validation.md). Current Community scorecard findings and their disposition are recorded in [Community scorecard notes](docs/community-scorecard.md).
 
-The test-vault sync refuses paths outside the Windows-local `obsidian-test-vault` plugin folder and refuses the main Syncthing vault.
+The test-vault sync requires an explicit `obsidian-test-vault` plugin folder and refuses the main Syncthing vault. The runtime smoke uses the Obsidian CLI and an explicitly marked test vault; it preserves settings and the active note. See [local validation](docs/local-validation.md).
 
 ## Privacy and security
 
