@@ -35,7 +35,7 @@
     "active-note-restored": true,
     "background-throttling-restored": true
   },
-  "pluginVersion": "0.2.1",
+  "pluginVersion": "0.2.2",
   "passed": true,
   "bundleSHA256": "65b3bed6ce7d077f86d16839157d84e404dea6921d4c0a3a37f4a5510d2e09e9",
   "platform": "macOS Apple Silicon",

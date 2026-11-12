@@ -1,6 +1,6 @@
 {
   "name": "obsidian-attachment-link-rules",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Choose link or embed syntax for dropped attachments by file extension.",
   "license": "MIT",
   "author": "Viggo Meesters",
