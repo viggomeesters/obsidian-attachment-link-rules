@@ -30,8 +30,8 @@ async function acceptance(config) {
   let data;
   const dataPath = path.join(config.vaultRoot, ".obsidian/plugins", id, "data.json");
   const active = app.workspace.activeLeaf;
-  const originallyEnabled = app.plugins.enabledPlugins.has(id);
-  const mailEnabled = app.plugins.enabledPlugins.has(mailId);
+  const originallyEnabled = !!app.plugins.plugins[id];
+  const mailEnabled = !!app.plugins.plugins[mailId];
   const contents = require("electron").remote.getCurrentWebContents();
   const backgroundThrottling = contents.getBackgroundThrottling();
   try {
@@ -133,9 +133,11 @@ async function acceptance(config) {
       });
       await restore("plugin-state-restored", async () => {
         if (originallyEnabled) await app.plugins.enablePlugin(id);
+        if (!!app.plugins.plugins[id] !== originallyEnabled) throw Error("plugin load state differs");
       });
       await restore("mail-state-restored", async () => {
-        if (mailEnabled && !app.plugins.enabledPlugins.has(mailId)) await app.plugins.enablePlugin(mailId);
+        if (mailEnabled && !app.plugins.plugins[mailId]) await app.plugins.enablePlugin(mailId);
+        if (!!app.plugins.plugins[mailId] !== mailEnabled) throw Error("Mail Drop load state differs");
       });
     }
     await restore("test-tab-closed", () => { if (leaf) leaf.detach(); });
