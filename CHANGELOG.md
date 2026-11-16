@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3 - 2026-11-16
+
+- Maintenance verification for Obsidian 1.15.1 on macOS desktop.
+- Add reproducible official Obsidian lint checks; no runtime code change.
+
 ## 0.2.2 — 2026-11-12
 
 - Observe delayed native file insertions for up to 60 seconds, instead of abandoning them after less than a second. Stop after the expected files, navigation, expiry or unload.
