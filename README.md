@@ -124,3 +124,6 @@ Importers can use the optional synchronous document event `attachment-link-rules
 Before consuming a drop, a cooperating importer dispatches `attachment-link-rules:managed-drop-v1` on that document with `{version:1,event:originalDragEvent}`. The normal drop observer skips that event, including when it ran first. This prevents a second rewrite of a whole mail block and avoids depending on the observer's short retry window for slow file I/O. These events do not install, store or rename attachments.
 
 Runtime evidence identifies the source and bundle hashes for this release.
+
+
+[Obsidian 1.15.1 assessment: checked source, local results and remaining host validation](docs/obsidian-1.15.1.md).
